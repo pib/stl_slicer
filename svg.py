@@ -15,7 +15,7 @@ def write_layer_lines(f, lines):
 def write_layer_paths(f, paths, number=None):
     f.write('<g>\n')
     if number is not None:
-        f.write('<text fill="none" stroke-width="0.1" stroke="blue">%d</text>\n' % number)
+        f.write('<text text-anchor="middle" font-size="2" fill="none" stroke-width="0.1" stroke="blue">%d</text>\n' % number)
 
     for path in paths:
         f.write('<path fill="none" stroke-width="0.1" stroke="red" d="M %f %f' % path[0])
