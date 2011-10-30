@@ -29,9 +29,9 @@ def tri_above_below(tri, z):
     above = []
     below = []
     for point in tri:
-        if point[Z] < z:
+        if point[Z] <= z:
             below.append(point)
-        elif point[Z] >= z:
+        elif point[Z] > z:
             above.append(point)
     return above, below
 
@@ -47,7 +47,7 @@ def slice_shape_at(facets, z):
         for a in above:
             for b in below:
                 line.append(find_line_plane_intersection(a, b, z))
-        if line[0] != line[1]:
+        if LineMap.key(line[0]) != LineMap.key(line[1]):
             lines.append(line)
     return lines
 
@@ -57,13 +57,14 @@ class LineMap(object):
         map = {}
         for line in lines:
             for point in line:
-                key = self._key(point)
+                key = self.key(point)
                 line_set = map.setdefault(key, [])
                 line_set.append(line)
         self._map = map
 
-    def _key(self, point):
-        return '{0:.8},{1:.8}'.format(*point)
+    @staticmethod
+    def key(point):
+        return '{0:.10},{1:.10}'.format(*point)
 
     def has_lines(self):
         if self._map:
@@ -73,12 +74,12 @@ class LineMap(object):
 
     def _pop_other_line(self, key, line):
         for point in line:
-            if self._key(point) == key:
+            if self.key(point) == key:
                 continue
             other_point = point
             break
 
-        key = self._key(other_point)
+        key = self.key(other_point)
         lines = self._map[key]
         lines.remove(line)
         if len(lines) == 0:
@@ -103,7 +104,7 @@ class LineMap(object):
 
         Also removes the used line from the internal map.
         """
-        key = self._key(point)
+        key = self.key(point)
         lines = self._map.get(key, None)
         if lines is None:
             return None
@@ -148,11 +149,14 @@ def main(args):
 
     svg.start_file(f)
     z = minz
+    layer = 1
     while z <= maxz:
         lines = slice_shape_at(facets, z)
         paths = path_lines(lines)
-        svg.write_layer_paths(f, paths)
+        svg.write_layer_paths(f, paths, layer)
         z += args.thickness
+        layer += 1
+    print 'Wrote', layer, 'layers to', svg_filename
     svg.end_file(f)
     f.close()
 
