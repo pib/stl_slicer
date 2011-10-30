@@ -4,6 +4,7 @@ def readFacet(f):
         raise ValueError('Expected "outer loop", got "%s"' % line)
 
     facet = []
+    line = f.readline().strip()
     while line != 'endloop':
         parts = line.split()
         if parts[0] != 'vertex':
@@ -14,6 +15,7 @@ def readFacet(f):
     line = f.readline().strip()
     if line != 'endfacet':
         raise ValueError('Expected "endfacet", got "%s"' % line)
+    return facet
 
 def parseText(f):
     line = f.readline().strip()
@@ -23,10 +25,10 @@ def parseText(f):
     name = parts[1]
 
     facets = []
-    line = f.readline.strip()
+    line = f.readline().strip()
     while line.startswith('facet'):
         facets.append(readFacet(f))
-        line = f.readline.strip()
+        line = f.readline().strip()
     if line != ('endsolid %s' % name):
         raise ValueError('Expected "endsolid %s", got "%s"' % (name, line))
 
