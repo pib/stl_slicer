@@ -59,9 +59,11 @@ def main(args):
     f = open(svg_filename, 'w')
 
     svg.start_file(f)
-    for z in range(int(math.floor(minz)), int(math.ceil(maxz)), 1):
+    z = minz
+    while z <= maxz:
         lines = slice_shape_at(facets, z)
         svg.write_layer(f, lines)
+        z += args.thickness
     svg.end_file(f)
     f.close()
     
@@ -70,7 +72,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('file', help='.stl file to slice')
-    parser.add_argument('-t', '--thickness', help='thickness of each slice')
+    parser.add_argument('-t', '--thickness', help='thickness of each slice, in mm', default=1, type=float)
     args = parser.parse_args()
 
     main(args)
