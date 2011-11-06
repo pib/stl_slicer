@@ -18,8 +18,8 @@ def write_layer_paths(f, paths, number=None):
         f.write('<text text-anchor="middle" font-size="2" fill="none" stroke-width="0.1" stroke="blue">%d</text>\n' % number)
 
     for path in paths:
-        f.write('<path fill="none" stroke-width="0.1" stroke="red" d="M %f %f' % path[0])
+        f.write('<path fill="none" stroke-width="0.1mm" stroke="red" d="M %fmm %fmm' % path[0])
         for point in path[1:]:
-            f.write(' L %f %f' % point)
+            f.write(' L %fmm %fmm' % point)
         f.write('" />\n')
     f.write('</g>\n')

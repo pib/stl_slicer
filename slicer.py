@@ -1,9 +1,13 @@
 import argparse
 import os.path
-import math
+import logging
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 from stl import parse
-import svg
+#import svg
+import ps
 
 X = 0
 Y = 1
@@ -135,37 +139,102 @@ def path_lines(lines):
     return paths
 
 
-def main(args):
-    facets = parse(open(args.file, 'rb'))
-    minz = 99999
-    maxz = -99999
+def bounding_cube(facets):
+    minx, maxx = 99999, -99999
+    miny, maxy = 99999, -99999
+    minz, maxz = 99999, -99999
     for facet in facets:
         for point in facet:
-            minz = min(minz, point[Z])
-            maxz = max(maxz, point[Z])
+            minx, maxx = min(minx, point[X]), max(maxx, point[X])
+            miny, maxy = min(miny, point[Y]), max(maxy, point[Y])
+            minz, maxz = min(minz, point[Z]), max(maxz, point[Z])
+    return minx, maxx, miny, maxy, minz, maxz
 
-    svg_filename = os.path.splitext(os.path.basename(args.file))[0] + '.svg'
-    f = open(svg_filename, 'w')
 
-    svg.start_file(f)
+def scale_to_fit(facets, width, height, scale=None):
+    """ Scale the input facets to fit within the desired width and height.
+
+    Returns the transformed facets.
+
+    Since the end-product can be rotated easily, the width and height
+    may be swapped during comparison, depending on whether the model
+    better fits into a landscape or portrait layout.
+
+    Also transforms all coordinates to greater than zero.
+    """
+    minx, maxx, miny, maxy, minz, maxz = bounding_cube(facets)
+    xsize, ysize = maxx - minx, maxy - miny
+
+    # If width/height relative proportions don't match, swap width and
+    # height settings
+    if ((width > height and xsize < ysize) or
+        (height > width and xsize > ysize)):
+            width, height = height, width
+
+    if scale:
+        width, height = xsize * scale, ysize * scale
+    else:
+        # check the different scales, bigger first
+        for scale in sorted((width / xsize, height / ysize), reverse=True):
+            if (scale * xsize <= width) and (scale * ysize <= height):
+                break
+
+    logger.info('Scaling by %f from %f, %f to %f, %f', scale, xsize, ysize, xsize*scale, ysize*scale)
+    scaled_facets = []
+    for facet in facets:
+        scaled_facets.append([((x - minx) * scale, (y - miny) * scale,
+                               (z - minz) * scale)
+                              for x, y, z in facet])
+        logger.debug('Scaled %r to %r', facet, scaled_facets[-1])
+    return width, height, 0, (maxz - minz) * scale, scaled_facets
+
+
+def main(args):
+    facets = parse(open(args.file, 'rb'))
+    logger.info('Read %d facets from %s' % (len(facets), args.file))
+    if args.scale:
+        width, height, minz, maxz, facets = scale(facets)
+    else:
+        width, height, minz, maxz, facets = scale_to_fit(facets, args.width, args.height)
+
+    ps_filename = os.path.splitext(os.path.basename(args.file))[0] + '.ps'
+    f = open(ps_filename, 'w')
+
+    ps.start_file(f, width, height)
     z = minz
     layer = 1
     while z <= maxz:
+        logger.debug('Slicing layer %d', layer)
         lines = slice_shape_at(facets, z)
         paths = path_lines(lines)
-        svg.write_layer_paths(f, paths, layer)
+        ps.write_layer_paths(f, paths, layer)
         z += args.thickness
         layer += 1
-    print 'Wrote', layer, 'layers to', svg_filename
-    svg.end_file(f)
+    logger.info('Wrote %d layers to %s' % (layer - 1, ps_filename))
+    ps.end_file(f)
     f.close()
 
 
 if __name__ == '__main__':
-    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('file', help='.stl file to slice')
-    parser.add_argument('-t', '--thickness', help='thickness of each slice, in mm', default=1, type=float)
+    parser.add_argument('-T', '--thickness', default=1, type=float,
+                        help='thickness of each slice, in mm')
+    parser.add_argument('-W', '--width', default=203, type=float,
+                        help='desired output width, in mm')
+    parser.add_argument('-H', '--height', default=279, type=float,
+                        help='desired output height, in mm')
+    parser.add_argument('-S', '--scale', type=float,
+                        help='scale by a fixed amount')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true')
+    parser.add_argument('-q', '--quiet', default=False, action='store_true')
     args = parser.parse_args()
+
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+    elif args.quiet:
+        logger.setLevel(0)
+    else:
+        logger.setLevel(logging.INFO)
 
     main(args)
