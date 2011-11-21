@@ -189,7 +189,28 @@ def scale_to_fit(facets, width, height, scale=None):
     return width, height, 0, (maxz - minz) * scale, scaled_facets
 
 
-def main(args):
+def command_line():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file', help='.stl file to slice')
+    parser.add_argument('-T', '--thickness', default=1, type=float,
+                        help='thickness of each slice, in mm')
+    parser.add_argument('-W', '--width', default=203, type=float,
+                        help='desired output width, in mm')
+    parser.add_argument('-H', '--height', default=279, type=float,
+                        help='desired output height, in mm')
+    parser.add_argument('-S', '--scale', type=float,
+                        help='scale by a fixed amount')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true')
+    parser.add_argument('-q', '--quiet', default=False, action='store_true')
+    args = parser.parse_args()
+
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+    elif args.quiet:
+        logger.setLevel(0)
+    else:
+        logger.setLevel(logging.INFO)
+
     facets = parse(open(args.file, 'rb'))
     logger.info('Read %d facets from %s' % (len(facets), args.file))
     if args.scale:
@@ -216,25 +237,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('file', help='.stl file to slice')
-    parser.add_argument('-T', '--thickness', default=1, type=float,
-                        help='thickness of each slice, in mm')
-    parser.add_argument('-W', '--width', default=203, type=float,
-                        help='desired output width, in mm')
-    parser.add_argument('-H', '--height', default=279, type=float,
-                        help='desired output height, in mm')
-    parser.add_argument('-S', '--scale', type=float,
-                        help='scale by a fixed amount')
-    parser.add_argument('-v', '--verbose', default=False, action='store_true')
-    parser.add_argument('-q', '--quiet', default=False, action='store_true')
-    args = parser.parse_args()
-
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-    elif args.quiet:
-        logger.setLevel(0)
-    else:
-        logger.setLevel(logging.INFO)
-
-    main(args)
+    command_line()
