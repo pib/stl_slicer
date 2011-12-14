@@ -22,7 +22,7 @@ def parseText(f):
     parts = line.split()
     if parts[0] != 'solid':
         raise ValueError('Expected "solid ...", got "%s"' % line)
-    name = parts[1]
+    name = ' '.join(parts[1:])
 
     facets = []
     line = f.readline().strip()

@@ -214,9 +214,11 @@ def command_line():
     facets = parse(open(args.file, 'rb'))
     logger.info('Read %d facets from %s' % (len(facets), args.file))
     if args.scale:
-        width, height, minz, maxz, facets = scale(facets)
+        width, height, minz, maxz, facets = scale_to_fit(facets, 0, 0,
+                                                         args.scale)
     else:
-        width, height, minz, maxz, facets = scale_to_fit(facets, args.width, args.height)
+        width, height, minz, maxz, facets = scale_to_fit(facets, args.width,
+                                                         args.height)
 
     ps_filename = os.path.splitext(os.path.basename(args.file))[0] + '.ps'
     f = open(ps_filename, 'w')
