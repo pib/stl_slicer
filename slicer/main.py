@@ -42,7 +42,10 @@ def tri_above_below(tri, z):
 
 def slice_shape_at(facets, z):
     lines = []
-    for tri in facets:
+    for maxz, minz, tri in facets:
+        if minz > z:
+            continue
+
         above, below = tri_above_below(tri, z)
         if not above or not below:
             continue
@@ -189,6 +192,12 @@ def scale_to_fit(facets, width, height, scale=None):
     return width, height, 0, (maxz - minz) * scale, scaled_facets
 
 
+def z_sort_facets(facets):
+    """ Sort facets by maximum Z, and build up a list containing
+    tuples of max Z and facets """
+    maxz_facets = [(max((f[0][Z], f[1][Z], f[2][Z])), min((f[0][Z], f[1][Z], f[2][Z])), f) for f in facets]
+    return sorted(maxz_facets)
+
 def command_line():
     parser = argparse.ArgumentParser()
     parser.add_argument('file', help='.stl file to slice')
@@ -219,6 +228,7 @@ def command_line():
     else:
         width, height, minz, maxz, facets = scale_to_fit(facets, args.width,
                                                          args.height)
+    maxz_facets = z_sort_facets(facets)
 
     ps_filename = os.path.splitext(os.path.basename(args.file))[0] + '.ps'
     f = open(ps_filename, 'w')
@@ -227,8 +237,13 @@ def command_line():
     z = minz
     layer = 1
     while z <= maxz:
+        i = 0
+        while maxz_facets[i][0] < z:
+            i += 1
+        maxz_facets = maxz_facets[i:]
+
         logger.debug('Slicing layer %d', layer)
-        lines = slice_shape_at(facets, z)
+        lines = slice_shape_at(maxz_facets, z)
         paths = path_lines(lines)
         ps.write_layer_paths(f, paths, layer)
         z += args.thickness
