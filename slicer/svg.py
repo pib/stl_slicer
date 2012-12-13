@@ -1,4 +1,4 @@
-def start_file(f):
+def start_file(f, width, height):
     f.write('<svg xmlns="http://www.w3.org/2000/svg">\n')
 
 

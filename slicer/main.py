@@ -6,7 +6,7 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 from stl import parse
-#import svg
+import svg
 import ps
 
 X = 0
@@ -209,6 +209,8 @@ def command_line():
                         help='desired output height, in mm')
     parser.add_argument('-S', '--scale', type=float,
                         help='scale by a fixed amount')
+    parser.add_argument('-s', '--svg', default=False, action='store_true',
+                        help='Output an .svg file instead of a .ps file')
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
     parser.add_argument('-q', '--quiet', default=False, action='store_true')
     args = parser.parse_args()
@@ -230,10 +232,17 @@ def command_line():
                                                          args.height)
     maxz_facets = z_sort_facets(facets)
 
-    ps_filename = os.path.splitext(os.path.basename(args.file))[0] + '.ps'
-    f = open(ps_filename, 'w')
+    if args.svg:
+        ext = '.svg'
+        writer = svg
+    else:
+        ext = '.ps'
+        writer = ps
 
-    ps.start_file(f, width, height)
+    out_filename = os.path.splitext(os.path.basename(args.file))[0] + ext
+    f = open(out_filename, 'w')
+
+    writer.start_file(f, width, height)
     z = minz
     layer = 1
     while z <= maxz:
@@ -245,11 +254,11 @@ def command_line():
         logger.debug('Slicing layer %d', layer)
         lines = slice_shape_at(maxz_facets, z)
         paths = path_lines(lines)
-        ps.write_layer_paths(f, paths, layer)
+        writer.write_layer_paths(f, paths, layer)
         z += args.thickness
         layer += 1
-    logger.info('Wrote %d layers to %s' % (layer - 1, ps_filename))
-    ps.end_file(f)
+    logger.info('Wrote %d layers to %s' % (layer - 1, out_filename))
+    writer.end_file(f)
     f.close()
 
 
