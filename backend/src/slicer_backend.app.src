@@ -1,0 +1,12 @@
+{application, slicer_backend,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { slicer_backend_app, []}},
+  {env, []}
+ ]}.
