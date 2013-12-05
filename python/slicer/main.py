@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import logging
+import math
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -242,7 +243,7 @@ def command_line():
     out_filename = os.path.splitext(os.path.basename(args.file))[0] + ext
     f = open(out_filename, 'w')
 
-    writer.start_file(f, width, height)
+    writer.start_file(f, width, height, math.ceil(maxz - minz / args.thickness))
     z = minz
     layer = 1
     while z <= maxz:

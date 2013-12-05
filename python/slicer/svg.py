@@ -1,4 +1,4 @@
-def start_file(f, width, height):
+def start_file(f, width, height, layers):
     f.write("""<svg xmlns="http://www.w3.org/2000/svg"
       xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
       xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">\n""")
