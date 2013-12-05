@@ -15,10 +15,13 @@ def write_layer_lines(f, lines):
                 line[0][0], line[0][1], line[1][0], line[1][1]))
 
 
+offset = 0
 def write_layer_paths(f, paths, number=None):
+    global offset
+    max_x = 0
     f.write(
-        '<g inkscape:groupmode="layer" inkscape:label="Layer {0}" id="{0}">\n'.format(
-            number))
+        '<g inkscape:groupmode="layer" inkscape:label="Layer {0}" id="{0}">\n<g transform="translate({1})">\n'.format(
+            number, offset))
 
     for path in paths:
         if number is not None:
@@ -33,8 +36,10 @@ def write_layer_paths(f, paths, number=None):
         f.write('<path fill="none" stroke-width="0.1" stroke="red" d="M %f %f' % path[0])
         for point in path[1:]:
             f.write(' L %f %f' % point)
+            max_x = max(max_x, point[0])
         f.write('" />\n')
 
         if number is not None:
             f.write('</g>\n')
-    f.write('</g>\n')
+    offset += max_x
+    f.write('</g>\n</g>\n')
