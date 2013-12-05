@@ -212,6 +212,8 @@ def command_line():
                         help='scale by a fixed amount')
     parser.add_argument('-s', '--svg', default=False, action='store_true',
                         help='Output an .svg file instead of a .ps file')
+    parser.add_argument('-d', '--dxf', default=False, action='store_true',
+                        help='Output an .dxf file instead of a .ps file')
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
     parser.add_argument('-q', '--quiet', default=False, action='store_true')
     args = parser.parse_args()
@@ -236,6 +238,10 @@ def command_line():
     if args.svg:
         ext = '.svg'
         writer_class = svg.SvgWriter
+    elif args.dxf:
+        import dxf
+        ext = '.dxf'
+        writer_class = dxf.DxfWriter
     else:
         ext = '.ps'
         writer_class = ps.PsWriter
