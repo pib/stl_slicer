@@ -235,15 +235,15 @@ def command_line():
 
     if args.svg:
         ext = '.svg'
-        writer = svg
+        writer_class = svg.SvgWriter
     else:
         ext = '.ps'
-        writer = ps
+        writer_class = ps.PsWriter
 
     out_filename = os.path.splitext(os.path.basename(args.file))[0] + ext
-    f = open(out_filename, 'w')
+    layers = math.ceil(maxz - minz / args.thickness)
 
-    writer.start_file(f, width, height, math.ceil(maxz - minz / args.thickness))
+    writer = writer_class(out_filename, width, height, layers)
     z = minz
     layer = 1
     while z <= maxz:
@@ -255,12 +255,11 @@ def command_line():
         logger.debug('Slicing layer %d', layer)
         lines = slice_shape_at(maxz_facets, z)
         paths = path_lines(lines)
-        writer.write_layer_paths(f, paths, layer)
+        writer.write_layer_paths(paths, layer)
         z += args.thickness
         layer += 1
     logger.info('Wrote %d layers to %s' % (layer - 1, out_filename))
-    writer.end_file(f)
-    f.close()
+    writer.finish()
 
 
 if __name__ == '__main__':
